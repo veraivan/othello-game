@@ -1,6 +1,7 @@
 import sys
+import random
 
-cantidad_movimientos = [(0,-1), (0,1), (-1,-1), (1,1), (-1,0), (1,0), (1,-1), (-1,1)] 
+cantidad_movimientos = [(0,-1), (0,1), (-1,-1), (1,1), (-1,0), (1,0), (1,-1), (-1,1)]
 
 tablero_pesos = [
     [100, -10, 11, 6, 6, 11, -10, 100],
@@ -15,9 +16,10 @@ tablero_pesos = [
 
 # 1 ficha blanca, -1 ficha negra, 0 celda vacia
 
+
 class Tablero:
     def __init__(self):
-        self.tablero = [None]*8 
+        self.tablero = [None] * 8
         for i in range(8):
             self.tablero[i] = [0]*8
         self.tablero[3][3] = 1
@@ -133,15 +135,87 @@ def minimax(estado):
     return mejor_movimiento
 
 """
-    
 
 
+class AgenteRL:
 
+    def __init__(self, n):
+        self.n = n
+        self.tablero = None
+        self.alfa = 0
+        self.entrenar = True
+        self.resultado_juego = 0
+        self.n = 0
+        self.tablero_final = None
+        self.jugador_agente = 1
+        self.q_rate = 0.1
+        lookupTablero = {}
+        self.reset(True)
 
+    def reset(self, entrenar):
+        tablero = Tablero()
+        lastTablero = Tablero()
+        self.entrenar = entrenar
+        self.resultadoJuego = 0
 
+    def set_q(self, q):
+        self.q_rate = q
 
+    def actualizar_alfa(self, juego_actual):
+        self.alfa = 0.5 - 0.49 * juego_actual / self.n
 
+    def jugar(self, jugador):
+        prob = 0
+        fil = 0
+        col = 0
+        prob_max = -sys.maxsize
 
+        # elegir casilla disponible con max reward
+        # for (int i = 0; i < tablero.length; i++) {
+        #     for (int j = 0; j < tablero[0].length; j++) {
+        #
+        #         if (tablero[i][j] == 0) { //esta vacio
+        #
+        #             tablero[i][j] = jugador;
+        #             prob = calculateReward(tablero, jugador);
+        #             if (prob > maxProb) {
+        #
+        #                 maxProb = prob;
+        #                 row = i;
+        #                 column = j;
+        #             }
+        #             tablero[i][j] = 0;
+        #         }
+        #     }
+        # }
 
+        # entrenar
+        if self.entrenar:
+            actualizar_probabilidad(self.tablero_final, prob_max, jugador)
 
+        # aplicar jugada
+        self.tablero.colocarFicha(self.tablero.tablero, [fil, col], jugador)
 
+        # actualizar ultimo tablero
+        self.copiar_tablero(self.tablero, self.tablero_final)
+
+    def jugar_vs_random(self):
+        jugador = self.jugador_agente
+        contrario = (jugador % 2) + 1
+        turno = 1
+        jugadas = 64
+        while jugadas > -1:
+            if turno == jugador:
+                q = random.random()
+                if q <= self.q_rate or not self.entrenar:
+                    jugar(jugador)
+                else:
+                    jugar_random(jugador)
+            else:
+                jugar_random(contrario)
+
+            resultado_juego = calcular_resultado(self.tablero)
+            if resultado_juego > 0:
+                if resultado_juego != jugador and self.entrenar:
+                    actualizar_probabilidad(self.tablero_final, calcular_recompenza(self.tablero, jugador), jugador)
+                break
