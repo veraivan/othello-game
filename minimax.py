@@ -149,14 +149,14 @@ class AgenteRL:
         self.tablero_final = None
         self.jugador_agente = 1
         self.q_rate = 0.1
-        lookupTablero = {}
+        self.lookupTablero = {}
         self.reset(True)
 
     def reset(self, entrenar):
-        tablero = Tablero()
-        lastTablero = Tablero()
+        self.tablero = Tablero()
+        self.tablero_final = Tablero()
         self.entrenar = entrenar
-        self.resultadoJuego = 0
+        self.resultado_juego = 0
 
     def set_q(self, q):
         self.q_rate = q
@@ -164,40 +164,81 @@ class AgenteRL:
     def actualizar_alfa(self, juego_actual):
         self.alfa = 0.5 - 0.49 * juego_actual / self.n
 
+    def serializar_tablero(self, tablero):
+        tablero_serializado = ''
+        for i in range(len(tablero)):
+            for j in range(len(tablero[0])):
+                tablero_serializado += tablero[i][j]
+        return tablero_serializado
+
+    def obtener_probabilidad(self, tablero):
+        tablero_serializado = self.serializar_tablero(tablero)
+        if not self.lookupTablero[tablero_serializado]:
+            self.lookupTablero[tablero_serializado] = 0.5
+        return self.lookupTablero[tablero_serializado]
+
+    def calcular_recompensa(self, tablero, jugador):
+        contrario = (jugador % 2) + 1
+        resultado = tablero.calcular_resultado()  # TODO: TOMAR DEL EVALUADOR DE RESULTADOS DE IVAN
+        # GANO
+        if resultado == jugador:
+            return 1
+        # PERDIO
+        elif resultado == contrario:
+            return 0
+        # EMPATE
+        elif resultado == 3:
+            return 0
+        else:
+            return self.obtener_probabilidad(tablero)
+
+    def actualizar_probabilidad(self, tablero, prob_prox_estado, jugador):
+        prob = self.calcular_recompensa(tablero, jugador)
+        prob = prob + self.alfa * (prob_prox_estado - prob)
+
+        tablero_serializado = self.serializar_tablero(tablero)
+        self.lookupTablero[tablero_serializado] = prob
+
+    def copiar_tablero(self, tablero_origen, tablero_destino):
+        tablero_destino = tablero_origen.copy()
+
+    # ELITISTA
     def jugar(self, jugador):
         prob = 0
         fil = 0
         col = 0
         prob_max = -sys.maxsize
-
         # elegir casilla disponible con max reward
-        # for (int i = 0; i < tablero.length; i++) {
-        #     for (int j = 0; j < tablero[0].length; j++) {
-        #
-        #         if (tablero[i][j] == 0) { //esta vacio
-        #
-        #             tablero[i][j] = jugador;
-        #             prob = calculateReward(tablero, jugador);
-        #             if (prob > maxProb) {
-        #
-        #                 maxProb = prob;
-        #                 row = i;
-        #                 column = j;
-        #             }
-        #             tablero[i][j] = 0;
-        #         }
-        #     }
-        # }
-
+        for i in range(self.tablero.length):
+            for j in range(self.tablero[0].length):
+                if self.tablero[i][j] == 0:    # esta vacio
+                    self.tablero[i][j] = jugador
+                    prob = self.calcular_recompensa(self.tablero, jugador)
+                    if prob > prob_max:
+                        prob_max = prob
+                        fil = i
+                        col = j
+                    self.tablero[i][j] = 0
         # entrenar
         if self.entrenar:
-            actualizar_probabilidad(self.tablero_final, prob_max, jugador)
-
+            self.actualizar_probabilidad(self.tablero_final, prob_max, jugador)
         # aplicar jugada
         self.tablero.colocarFicha(self.tablero.tablero, [fil, col], jugador)
-
         # actualizar ultimo tablero
-        self.copiar_tablero(self.tablero, self.tablero_final)
+        self.tablero_final = self.tablero.copy()
+
+    def jugar_random(self, jugador):
+        filas = []
+        columnas = []
+        for i in range(len(self.tablero)):
+            for j in range(len(self.tablero[0])):
+                if self.tablero[i][j] == 0:
+                    filas.append(i)
+                    columnas.append(i)
+        rdm = int(random.random() * len(filas))
+        self.tablero[filas[rdm]][columnas[rdm]] = jugador
+        if jugador == self.jugador_agente:
+            self.tablero_final = self.tablero.copy()
 
     def jugar_vs_random(self):
         jugador = self.jugador_agente
@@ -208,14 +249,14 @@ class AgenteRL:
             if turno == jugador:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
-                    jugar(jugador)
+                    self.jugar(jugador)
                 else:
-                    jugar_random(jugador)
+                    self.jugar_random(jugador)
             else:
-                jugar_random(contrario)
+                self.jugar_random(contrario)
 
-            resultado_juego = calcular_resultado(self.tablero)
+            resultado_juego = self.tablero.calcular_resultado(self.tablero)
             if resultado_juego > 0:
                 if resultado_juego != jugador and self.entrenar:
-                    actualizar_probabilidad(self.tablero_final, calcular_recompenza(self.tablero, jugador), jugador)
+                    self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break

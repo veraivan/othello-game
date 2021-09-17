@@ -20,4 +20,9 @@ for q in q_rates:
     for i in range(agente.n):
         agente.reset(True)
         agente.actualizar_alfa(i)
+        # SE ELIGE SI VA A SER ENTRENADO CON UN JUGADOR ALEATORIO O CON UN JUGADOR MINIMAX
+
+        # JUGADOR ALEATORIO
         agente.jugar_vs_random()
+
+        # JUGADOR MINIMAX
