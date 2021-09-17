@@ -9,6 +9,7 @@ ESTO DEBE ESTAR EN EL MAIN PRINCIPAL PARA EJECUTAR EL ALGORITMO
 q_rates = {0.5}
 
 ciclos_entrenamiento = 100000
+ciclos_entrenamiento_humano = 0
 
 for q in q_rates:
     veces_ganadas = 0
@@ -26,3 +27,10 @@ for q in q_rates:
         agente.jugar_vs_random()
 
         # JUGADOR MINIMAX
+
+        # JUGADOR HUMANO
+        agente.set_n(ciclos_entrenamiento_humano)
+        agente.set_alfa(0.7)
+        for i in range(agente.n):
+            agente.reset(True)
+            agente.jugar_vs_humano()

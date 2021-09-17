@@ -158,6 +158,12 @@ class AgenteRL:
         self.entrenar = entrenar
         self.resultado_juego = 0
 
+    def set_n(self, n):
+        self.n = n
+
+    def set_alfa(self, alfa):
+        self.alfa = alfa
+
     def set_q(self, q):
         self.q_rate = q
 
@@ -260,3 +266,31 @@ class AgenteRL:
                 if resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
+            turno = 2 - turno + 1
+            jugadas -= 1
+
+    def jugar_humano(self, jugador):
+        """
+        Implementar de acuerdo como se juega Reversi/Othello y de acuerdo a como se reciben los valores desde la UI
+        :param jugador:
+        :return:
+        """
+        return jugador
+
+    def jugar_vs_humano(self):
+        jugador = self.jugador_agente
+        contrario = (jugador % 2) + 1
+        turno = 1
+        jugadas = 64
+        while jugadas > -1:
+            if turno == jugador:
+                self.jugar(jugador)
+            else:
+                self.jugar_humano(contrario)
+            self.resultado_juego = self.tablero.calcular_resultado()
+            if self.resultado_juego > 0:
+                if self.resultado_juego != jugador and entrenar:
+                    self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
+                break
+            turno = 2 - turno + 1
+            jugadas -= 1
