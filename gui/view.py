@@ -115,7 +115,7 @@ while True:
             x, y = pygame.mouse.get_pos()
             row = y // 70
             col = x // 70 
-            if tablero.validarMovimientosJugador(row,col,1):
+            if tablero.validarMovimientos(row,col,1):
                 tablero.matriz[row][col] = Ficha(row,col,1)
                 tablero.voltearFichas(row,col,1)
             else:
