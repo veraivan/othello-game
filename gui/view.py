@@ -2,6 +2,8 @@ import pygame, sys, os
 from copy import deepcopy
 from figuras import Tablero, Ficha
 
+
+"""
 tablero_pesos = [
     [100, -10, 11, 6, 6, 11, -10, 100],
     [-10, -20, 1, 2, 2, 1, -20, -10],
@@ -29,51 +31,61 @@ def funcion_evaluacion(tablero, color):
     return total
 
 
-def min_valor(estado):
+def min_valor(estado, N):
 
-    if estado.finDeJuego():
+    if estado.prueba():
         return (funcion_evaluacion(estado,1), None)
     
     mejor_utilidad = sys.maxsize 
     mejor_movimiento = None 
-    
+    count = 1
+
     for move in estado.movimientosPosibles(1):
-        nuevo_estado = deepcopy(estado)
-        nuevo_estado.voltearFichas(move[0],move[1],1)
-        tupla = max_valor(nuevo_estado)
-        if tupla[0] < mejor_utilidad:
-            mejor_utilidad = tupla[0]
-            mejor_movimiento = move
+        if count <= N:
+            nuevo_estado = deepcopy(estado)
+            nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],1)
+            nuevo_estado.voltearFichas(move[0],move[1],1)
+            tupla = max_valor(nuevo_estado, N)
+            if tupla[0] < mejor_utilidad:
+                mejor_utilidad = tupla[0]
+                mejor_movimiento = move 
+        else: 
+            break
     return (mejor_utilidad, mejor_movimiento)
 
 
-def max_valor(estado):
-    if estado.finDeJuego():
+def max_valor(estado, N):
+
+    if estado.prueba():
         return (funcion_evaluacion(estado,-1),None)
 
     mejor_utilidad = -sys.maxsize
     mejor_movimiento = None 
+    count = 1
     
-    for move in estado.movimientosPosibles(-1):
-        nuevo_estado = deepcopy(estado)
-        nuevo_estado.voltearFichas(move[0],move[1],-1)
-        tupla = min_valor(nuevo_estado)
-        if tupla[0] > mejor_utilidad:
-            mejor_utilidad = tupla[0]
-            mejor_movimiento = move
+    for move in estado.movimientosPosibles(-1): 
+        if count <= N:
+            count += 1
+            nuevo_estado = deepcopy(estado)
+            nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],-1)
+            nuevo_estado.voltearFichas(move[0],move[1],-1)
+            tupla = min_valor(nuevo_estado, N)
+            if tupla[0] > mejor_utilidad:
+                mejor_utilidad = tupla[0]
+                mejor_movimiento = move 
+        else:
+            break
     return (mejor_utilidad, mejor_movimiento)
 
 
-def minimax(estado):
-    mejor_movimiento = max_valor(estado)[1]
+def minimax(estado, N):
+    mejor_movimiento = max_valor(estado, N)[1]
     return mejor_movimiento
-
-
-tablero = Tablero()
-print(minimax(tablero))
-
 """
+
+
 pygame.init()
+tablero = Tablero()
 
 WIDTH = HEIGHT = 560
 pantalla = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -131,5 +143,3 @@ while True:
         
     
     pygame.display.update()
-
-"""

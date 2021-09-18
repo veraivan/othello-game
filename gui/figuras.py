@@ -48,18 +48,18 @@ class Tablero:
         else:
             oponente = -pieza 
             for pos in movimientos:
-                if self.validarDireccion(row+pos[0] ,col+pos[1]) and self.checkearVolteo(row+pos[0] ,col+pos[1], pos, pieza, oponente):
+                if self.checkearVolteo(row+pos[0] ,col+pos[1], pos, pieza, oponente):
                     return True
 
     def checkearVolteo(self, x, y, pos, pieza, oponente):
         if self.matriz[x][y] and self.matriz[x][y].color == oponente:
             while self.validarDireccion(x,y):
-                x += pos[0]
-                y += pos[1]
                 if self.matriz[x][y] == None:
                     return False 
                 elif self.matriz[x][y].color == pieza:
                     return True 
+                x += pos[0]
+                y += pos[1]
         else:
             return False    
     
@@ -72,7 +72,7 @@ class Tablero:
     def voltearFichas(self, row, col, pieza):
         oponente = -pieza 
         for pos in movimientos:
-            if self.checkearVolteo(row+pos[0] ,col+pos[1], pos, pieza, oponente):
+            if self.validarDireccion(row+pos[0] ,col+pos[1]) and self.checkearVolteo(row+pos[0] ,col+pos[1], pos, pieza, oponente):
                 self.cambioColor(row+pos[0] ,col+pos[1], pos, pieza, oponente)
     
     def cambioColor(self, x, y, pos, pieza, oponente):
@@ -91,13 +91,13 @@ class Tablero:
 
     def getMovimientos(self, x, y, destino, oponente):
         if self.matriz[x][y] and self.matriz[x][y].color  == oponente:
-            while x >= 0 and x < 8 and y >= 0 and y < 8:
-                x += destino[0]
-                y += destino[1]
+            while self.validarDireccion(x,y):
                 if self.matriz[x][y] == None:
                     return (x,y) 
                 elif self.matriz[x][y].color == -oponente:
                     return False
+                x += destino[0]
+                y += destino[1]
         else:
             return False 
 
@@ -106,8 +106,8 @@ class Tablero:
         movimientos_legales = []
         for origin in self.contarFichas(pieza):
             for destino in movimientos:
-                x, y = origin[0] + destino[0], origin[1] + destino[1]
-                pos = self.getMovimientos(x, y, destino, -pieza)
+                x, y = origin[0] + destino[0], origin[1] + destino[1] 
+                pos = self.getMovimientos(x, y, destino, -pieza) if self.validarDireccion(x,y) else False
                 if pos:
                     movimientos_legales.append(pos)
         return movimientos_legales 
@@ -126,7 +126,14 @@ class Tablero:
         if numBlanco == 0 and numNegro == 0:
             return True 
         else:
-            return False
+            return False 
+    
+    def prueba(self):
+        for f in range(8):
+            for c in range(8):
+                if not self.matriz[f][c]: 
+                    return False 
+        return True
 
     
 
