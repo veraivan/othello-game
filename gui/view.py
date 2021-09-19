@@ -115,9 +115,10 @@ while True:
             x, y = pygame.mouse.get_pos()
             row = y // 70
             col = x // 70 
-            if tablero.validarMovimientos(row,col,1):
-                tablero.matriz[row][col] = Ficha(row,col,1)
-                tablero.voltearFichas(row,col,1)
+            if tablero.validarMovimientos(row,col,-1):
+                tablero.matriz[row][col] = Ficha(row,col,-1)
+                tablero.voltearFichas(row,col,-1)
+                #llAMARLE A TU RL
             else:
                 print("Invalido")
  
@@ -130,6 +131,8 @@ while True:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
                 menu_main = False 
                 juego = True
+                #MENSAJE ENTRENANDO
+                # 
             else:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
         else:
