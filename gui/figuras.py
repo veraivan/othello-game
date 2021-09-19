@@ -5,6 +5,12 @@ movimientos = [(0,-1), (0,1), (-1,-1), (1,1), (-1,0), (1,0), (1,-1), (-1,1)]
 
 # 1 Blanca, -1 Negro, None vacio
 class Ficha:
+    def __str__(self):
+        return 'ficha '+str(self.color)
+
+    def __repr__(self):
+        return 'ficha '+str(self.color)
+
     def __init__(self, row, col, color):
         self.x = 70 * col + 35
         self.y = 70 * row + 35 
@@ -52,7 +58,7 @@ class Tablero:
                     return True
 
     def checkearVolteo(self, x, y, pos, pieza, oponente):
-        if self.matriz[x][y] and self.matriz[x][y].color == oponente:
+        if self.validarDireccion(x,y) and self.matriz[x][y] and self.matriz[x][y].color == oponente:
             while self.validarDireccion(x,y):
                 if self.matriz[x][y] == None:
                     return False 
@@ -87,7 +93,25 @@ class Tablero:
             for c in range(8):
                 if self.matriz[f][c] and self.matriz[f][c].color  == pieza:
                     posiciones.append((f,c))
-        return posiciones 
+        return posiciones
+
+    def calcular_resultado(self):
+        if self.finDeJuego():
+            jugador1 = self.contarFichas(1)
+            jugador2 = self.contarFichas(-1)
+            if len(jugador1) > len(jugador2):
+                return 1
+            elif len(jugador1) < len(jugador2):
+                return -1
+            elif len(jugador1) == len(jugador2):
+                return 3
+        else:
+            return 0
+
+    def colocar_ficha_nueva(self, x, y, jugador):
+        self.matriz[x][y] = Ficha(x, y, jugador)
+        self.voltearFichas(x, y, jugador)
+
 
     def getMovimientos(self, x, y, destino, oponente):
         if self.matriz[x][y] and self.matriz[x][y].color  == oponente:

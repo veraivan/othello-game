@@ -1,6 +1,7 @@
 import pygame, sys, os 
 from copy import deepcopy
 from figuras import Tablero, Ficha
+from minimax import entrenar_nuevo_agente
 
 
 
@@ -36,15 +37,15 @@ def funcion_evaluacion(tablero, color):
 def min_valor(estado, N):
 
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,1),None) 
+        return (funcion_evaluacion(estado,1),None)
     
-    lista_movimientos = estado.movimientosPosibles(-1) 
+    lista_movimientos = estado.movimientosPosibles(-1)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,-1),None) 
+        return (funcion_evaluacion(estado,-1),None)
 
-    mejor_utilidad = sys.maxsize 
-    mejor_movimiento = None 
+    mejor_utilidad = sys.maxsize
+    mejor_movimiento = None
 
     for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
@@ -53,31 +54,31 @@ def min_valor(estado, N):
         tupla = max_valor(nuevo_estado, N+1)
         if tupla[0] < mejor_utilidad:
             mejor_utilidad = tupla[0]
-            mejor_movimiento = move 
+            mejor_movimiento = move
     return (mejor_utilidad, mejor_movimiento)
 
 
 def max_valor(estado, N):
-    
+
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,-1),None) 
-    
-    lista_movimientos = estado.movimientosPosibles(1) 
+        return (funcion_evaluacion(estado,-1),None)
+
+    lista_movimientos = estado.movimientosPosibles(1)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,1),None) 
+        return (funcion_evaluacion(estado,1),None)
 
     mejor_utilidad = -sys.maxsize
-    mejor_movimiento = None 
+    mejor_movimiento = None
     
-    for move in lista_movimientos: 
+    for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
         nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],1)
         nuevo_estado.voltearFichas(move[0],move[1],1)
         tupla = min_valor(nuevo_estado, N + 1)
         if tupla[0] > mejor_utilidad:
             mejor_utilidad = tupla[0]
-            mejor_movimiento = move 
+            mejor_movimiento = move
     return (mejor_utilidad, mejor_movimiento)
 
 
@@ -100,12 +101,14 @@ time = pygame.time.Clock()
 font = pygame.font.SysFont("notomono", 15, True)
 text_font = font.render("Comenzar juego", True, "#FFFFFF")
 
-background = pygame.image.load("principal.jpg").convert() 
+background = pygame.image.load("principal.jpg").convert()
 rect = pygame.Rect((30,50), (160,50)) 
 
 menu_main = True 
 juego = False
-
+turno = 1
+agente = None
+rl = False
 while True:
 
     time.tick(90)
@@ -119,12 +122,13 @@ while True:
             x, y = pygame.mouse.get_pos()
             row = y // 70
             col = x // 70 
-            if tablero.validarMovimientos(row,col,-1):
-                tablero.matriz[row][col] = Ficha(row,col,-1)
-                tablero.voltearFichas(row,col,-1)
-                x, y = minimax(tablero,1)
-                tablero.matriz[x][y] = Ficha(x,y,1)
-                tablero.voltearFichas(x,y,1)
+            if tablero.validarMovimientos(row, col, -1):
+                tablero.matriz[row][col] = Ficha(row, col, -1)
+                tablero.voltearFichas(row, col, -1)
+                x, y = minimax(tablero, 1)
+                tablero.matriz[x][y] = Ficha(x, y, 1)
+                tablero.voltearFichas(x, y, 1)
+                turno = -1
             else:
                 print("Invalido")
  
@@ -137,8 +141,10 @@ while True:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
                 menu_main = False 
                 juego = True
+                if rl:
+                    agente = entrenar_nuevo_agente()
                 #MENSAJE ENTRENANDO
-                # 
+                #
             else:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
         else:
@@ -146,6 +152,9 @@ while True:
 
         pantalla.blit(text_font, (30 + int((160 -text_font.get_width()) / 2),50+(int((50-text_font.get_height())) / 2)))
     elif juego:
+        if turno == -1 and rl:
+            tablero = agente.siguiente_jugada(tablero, -1)
+            turno = 1
         pantalla.fill("#008000")
         tablero.pintarTablero(pantalla)
         tablero.colocarFichas(pantalla)
