@@ -1,5 +1,6 @@
 import sys
 import random
+from gui.figuras import Tablero, Ficha
 from copy import deepcopy
 
 cantidad_movimientos = [(0,-1), (0,1), (-1,-1), (1,1), (-1,0), (1,0), (1,-1), (-1,1)]
@@ -17,7 +18,7 @@ tablero_pesos = [
 
 # 1 ficha blanca, -1 ficha negra, 0 celda vacia
 
-
+"""
 class Tablero:
     def __init__(self):
         self.tablero = [None] * 8
@@ -63,78 +64,6 @@ class Tablero:
             if pos:
                 movimientos_legales.add(pos)
         return movimientos_legales 
-    
-
-
-"""
-def funcion_evaluacion(table, color):
-    oponente = -color 
-    total = 0 
-
-    coordenadas_jugador = countFicha(color) 
-    for pos in coordenadas_jugador:
-        total += tablero_pesos[pos[0]][pos[1]] 
-    
-    coordenadas_opp = countFicha(oponente) 
-    for pos in coordenadas_opp:
-        total -= tablero_pesos[pos[0]][pos[1]]
-
-    return total
-
-
-
-def verificacionCambiarColor(estado, x, y, destino, pieza):
-    oponente = -pieza
-    if estado[x][y] == oponente:
-        while x >= 0 and x < 8 and y >= 0 and y < 8:
-            x += destino[0]
-            y += destino[1]
-            if estado[x][y] == 0:
-                return False
-            elif estado[x][y] == pieza:
-                return True
-    else:
-        return False
-
-
-
-def colocarFicha(estado, punto, pieza):
-    estado[punto[0]][punto[1]] = pieza 
-
-    for destino in movimientos:
-        if verificacionCambiarColor(estado, punto[0], punto[1], destino, pieza):
-            mover(estado, punto[0], punto[1], destino, pieza)
-
-
-def min_valor(estado):
-    if tableroCompleto((estado)):
-        return funcion_evaluacion(estado,-1)
-    
-    mejor_point = sys.maxsize 
-    coor = countFicha(estado, -1)
-    moves = verificar_movimientos(estado) 
-    for move in moves:
-        colocarFicha(estado, move, -1)
-        mejor_point = min(mejor_point, max_valor(estado))
-    return mejor_point
-
-def max_valor(estado):
-    if tableroCompleto((estado)):
-        return funcion_evaluacion(estado,1)
-
-    mejor_point = -sys.maxsize 
-    coor = countFicha(estado, 1)
-    moves = verificar_movimientos(estado) 
-    for move in moves:
-        colocarFicha(estado, move, 1)
-        mejor_point = max(mejor_point,min_valor(estado))
-    return mejor_point
-
-
-def minimax(estado):
-    mejor_movimiento = max_valor(estado)
-    return mejor_movimiento
-
 """
 
 
@@ -146,7 +75,6 @@ class AgenteRL:
         self.alfa = 0
         self.entrenar = True
         self.resultado_juego = 0
-        self.n = 0
         self.tablero_final = None
         self.jugador_agente = 1
         self.q_rate = 0.1
@@ -183,13 +111,21 @@ class AgenteRL:
 
     def obtener_probabilidad(self, tablero):
         tablero_serializado = self.serializar_tablero(tablero)
-        if not self.lookupTablero[tablero_serializado]:
+        if not tablero_serializado in self.lookupTablero:
             self.lookupTablero[tablero_serializado] = 0.5
         return self.lookupTablero[tablero_serializado]
 
+    def actualizar_probabilidad(self, tablero, prob_prox_estado, jugador):
+        prob = self.calcular_recompensa(tablero, jugador)
+        prob = prob + self.alfa * (prob_prox_estado - prob)
+
+        tablero_serializado = self.serializar_tablero(tablero)
+        self.lookupTablero[tablero_serializado] = prob
+
     def calcular_recompensa(self, tablero, jugador):
-        contrario = (jugador % 2) + 1
-        resultado = tablero.calcular_resultado()  # TODO: CONTEO DE FICHAS PARA VER QUIEN ES EL GANADOR
+        contrario = -jugador
+        resultado = tablero.calcular_resultado()
+
         # GANO
         if resultado == jugador:
             return 1
@@ -202,80 +138,75 @@ class AgenteRL:
         else:
             return self.obtener_probabilidad(tablero)
 
-    def actualizar_probabilidad(self, tablero, prob_prox_estado, jugador):
-        prob = self.calcular_recompensa(tablero, jugador)
-        prob = prob + self.alfa * (prob_prox_estado - prob)
-
-        tablero_serializado = self.serializar_tablero(tablero)
-        self.lookupTablero[tablero_serializado] = prob
-
-    def copiar_tablero(self, tablero_origen, tablero_destino):
-        tablero_destino = tablero_origen.copy()
-
     # ELITISTA
-    def jugar(self, jugador):
+    def jugar(self, jugador, contador):
         prob = 0
         fil = 0
         col = 0
         prob_max = -sys.maxsize
+        matriz_anterior = deepcopy(self.tablero.matriz)
         # elegir casilla disponible con max reward
-        for i in range(8):
-            for j in range(8):
-                if self.tablero.matriz[i][j] == None:    # esta vacio
-                    # INICIALMENTE
-                    # 1 es blanco, computador
-                    # -1 es negro, jugador
+        movimientos = self.tablero.movimientosPosibles(jugador)
+        for mov in movimientos:
+            i = mov[0]
+            j = mov[1]
+            if not self.tablero.matriz[i][j]:    # esta vacio
+                # INICIALMENTE
+                # 1 es blanco, computador
+                # -1 es negro, jugador
 
-                    # validar si es que deja poner en esa posicion
-                    if self.tablero.validarMovimiento():
-                        self.tablero.matriz[i][j] = Ficha(i, j, jugador)
-                        prob = self.calcular_recompensa(self.tablero, jugador)
-                        if prob > prob_max:
-                            prob_max = prob
-                            fil = i
-                            col = j
-                        self.tablero[i][j] = None
+                # validar si es que deja poner en esa posicion
+                if self.tablero.validarMovimientos(i, j, jugador):
+                    self.tablero.colocar_ficha_nueva(i, j, jugador)
+                    prob = self.calcular_recompensa(self.tablero, jugador)
+                    if prob > prob_max:
+                        prob_max = prob
+                        fil = i
+                        col = j
+                    self.tablero.matriz = matriz_anterior
         # entrenar
         if self.entrenar:
             self.actualizar_probabilidad(self.tablero_final, prob_max, jugador)
         # aplicar jugada
-        self.tablero.colocarFicha(fil, col, jugador)
+        self.tablero.colocar_ficha_nueva(fil, col, jugador)
         # actualizar ultimo tablero
         self.tablero_final = deepcopy(self.tablero)
 
-    def jugar_random(self, jugador):
+    def jugar_random(self, jugador, contador):
         filas = []
         columnas = []
-        for i in range(8):
-            for j in range(8):
-                if not self.tablero.matriz[i][j]:
-                    filas.append(i)
-                    columnas.append(i)
-        rdm = int(random.random() * len(filas))
+        movimientos = self.tablero.movimientosPosibles(jugador)
+        rdm = int(random.random() * len(movimientos))
         # validar la posicion y asignar
-        if self.tablero.validarMovimiento():
-            self.tablero.matriz[filas[rdm]][columnas[rdm]] = Ficha(i, j, jugador)
-        if jugador == self.jugador_agente:
-            self.tablero_final = deepcopy(self.tablero)
+        if rdm > 0:
+            if self.tablero.validarMovimientos(movimientos[rdm][0], movimientos[rdm][1], jugador):
+                self.tablero.colocar_ficha_nueva(movimientos[rdm][0], movimientos[rdm][1], jugador)
+            if jugador == self.jugador_agente:
+                self.tablero_final = deepcopy(self.tablero)
 
     def jugar_vs_random(self):
         jugador = self.jugador_agente
-        contrario = (jugador % 2) + 1
+        contrario = -jugador
         turno = 1
         jugadas = 60
+        contador_jugar = 1
+        contador_jugar_random = 1
         while jugadas > -1:
             if turno == jugador:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
-                    self.jugar(jugador)
+                    self.jugar(jugador, contador_jugar)
+                    contador_jugar += 1
                 else:
-                    self.jugar_random(jugador)
+                    self.jugar_random(jugador, contador_jugar_random)
+                    contador_jugar_random += 1
             else:
-                self.jugar_random(contrario)
+                self.jugar_random(contrario, contador_jugar_random)
+                contador_jugar_random += 1
 
-            resultado_juego = self.tablero.calcular_resultado()
-            if resultado_juego > 0:
-                if resultado_juego != jugador and self.entrenar:
+            self.resultado_juego = self.tablero.calcular_resultado()
+            if self.resultado_juego > 0:
+                if self.resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
             turno = 2 - turno + 1
@@ -291,7 +222,7 @@ class AgenteRL:
 
     def jugar_vs_humano(self):
         jugador = self.jugador_agente
-        contrario = (jugador % 2) + 1
+        contrario = -jugador
         turno = 1
         jugadas = 60
         while jugadas > -1:
@@ -301,8 +232,65 @@ class AgenteRL:
                 self.jugar_humano(contrario)
             self.resultado_juego = self.tablero.calcular_resultado()
             if self.resultado_juego > 0:
-                if self.resultado_juego != jugador and entrenar:
+                if self.resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
             turno = 2 - turno + 1
             jugadas -= 1
+
+
+def entrenar_nuevo_agente():
+    q_rates = {0.1, 0.5}
+
+    ciclos_entrenamiento = 50
+    ciclos_entrenamiento_humano = 0
+    contador_total_juegos = 1000
+
+    for q in q_rates:
+        tasa_victorias = 0
+        tasa_derrotas = 0
+        tasa_empates = 0
+
+        agente = AgenteRL(ciclos_entrenamiento)
+        agente.set_q(q)
+        # SE ELIGE SI VA A SER ENTRENADO CON UN JUGADOR ALEATORIO O CON UN JUGADOR MINIMAX
+
+        # JUGADOR ALEATORIO
+        for i in range(agente.n):
+            agente.reset(True)
+            agente.actualizar_alfa(i)
+            agente.jugar_vs_random()
+
+        # JUGADOR MINIMAX
+
+        # JUGADOR HUMANO
+        agente.set_n(ciclos_entrenamiento_humano)
+        agente.set_alfa(0.7)
+        for i in range(agente.n):
+            agente.reset(True)
+            # agente.jugar_vs_humano()
+            agente.jugar_vs_random()
+
+        victorias = 0
+        derrotas = 0
+        empates = 0
+        contrario = -agente.jugador_agente
+        for i in range(contador_total_juegos):
+            agente.reset(False)
+            agente.jugar_vs_random()
+
+            if agente.resultado_juego == agente.jugador_agente:
+                victorias += 1
+            elif agente.resultado_juego == contrario:
+                derrotas +=1
+            else:
+                empates += 1
+        tasa_victorias += victorias / contador_total_juegos
+        tasa_derrotas += derrotas / contador_total_juegos
+        tasa_empates += derrotas / contador_total_juegos
+
+        print('>>>>>> TASA DE VICTORIAS: V/T=', tasa_victorias)
+        print('>>>>>> TASA DE DERROTAS: D/T=', tasa_derrotas)
+        print('>>>>>> TASA DE EMPATES: E/T=', tasa_empates)
+
+    return agente

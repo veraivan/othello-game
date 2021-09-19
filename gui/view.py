@@ -1,9 +1,10 @@
 import pygame, sys, os 
 from copy import deepcopy
 from figuras import Tablero, Ficha
+from minimax import entrenar_nuevo_agente
 
 
-"""
+
 tablero_pesos = [
     [100, -10, 11, 6, 6, 11, -10, 100],
     [-10, -20, 1, 2, 2, 1, -20, -10],
@@ -81,7 +82,6 @@ def max_valor(estado, N):
 def minimax(estado, N):
     mejor_movimiento = max_valor(estado, N)[1]
     return mejor_movimiento
-"""
 
 
 pygame.init()
@@ -130,6 +130,7 @@ while True:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
                 menu_main = False 
                 juego = True
+                agente = entrenar_nuevo_agente()
             else:
                 pygame.draw.rect(pantalla, "#191970", rect, border_radius=12)
         else:
