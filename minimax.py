@@ -139,7 +139,7 @@ class AgenteRL:
             return self.obtener_probabilidad(tablero)
 
     # ELITISTA
-    def jugar(self, jugador, contador):
+    def jugar(self, jugador):
         prob = 0
         fil = 0
         col = 0
@@ -164,14 +164,17 @@ class AgenteRL:
                         fil = i
                         col = j
                     self.tablero.matriz = deepcopy(matriz_anterior)
-        # entrenar
         if len(movimientos) > 0:
+            # entrenar
             if self.entrenar:
                 self.actualizar_probabilidad(self.tablero_final, prob_max, jugador)
             # aplicar jugada
             self.tablero.colocar_ficha_nueva(fil, col, jugador)
-        # actualizar ultimo tablero
-        self.tablero_final = deepcopy(self.tablero)
+            # actualizar ultimo tablero
+            self.tablero_final = deepcopy(self.tablero)
+        else:
+            self.tablero_final = deepcopy(self.tablero)
+            return fil, col
 
     def jugar_random(self, jugador, contador):
         filas = []
@@ -200,7 +203,7 @@ class AgenteRL:
             if turno == jugador:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
-                    self.jugar(jugador, contador_jugar)
+                    self.jugar(jugador)
                     contador_jugar += 1
                 else:
                     self.jugar_random(jugador, contador_jugar_random)
@@ -243,13 +246,18 @@ class AgenteRL:
             turno = 2 - turno + 1
             jugadas -= 1
 
+    def siguiente_jugada(self, tablero, jugador):
+        self.tablero = tablero
+        self.jugar(jugador)
+        return self.tablero
+
 
 def entrenar_nuevo_agente():
-    q_rates = {0.1, 0.5}
+    q_rates = {0.5}
 
-    ciclos_entrenamiento = 2000
+    ciclos_entrenamiento = 200
     ciclos_entrenamiento_humano = 0
-    contador_total_juegos = 50
+    contador_total_juegos = 0
 
     for q in q_rates:
         tasa_victorias = 0
@@ -290,12 +298,12 @@ def entrenar_nuevo_agente():
                 derrotas +=1
             else:
                 empates += 1
-        tasa_victorias += victorias / contador_total_juegos
-        tasa_derrotas += derrotas / contador_total_juegos
-        tasa_empates += empates / contador_total_juegos
-
-        print('>>>>>> TASA DE VICTORIAS: V/T=', tasa_victorias)
-        print('>>>>>> TASA DE DERROTAS: D/T=', tasa_derrotas)
-        print('>>>>>> TASA DE EMPATES: E/T=', tasa_empates)
+        # tasa_victorias += victorias / contador_total_juegos
+        # tasa_derrotas += derrotas / contador_total_juegos
+        # tasa_empates += empates / contador_total_juegos
+        #
+        # print('>>>>>> TASA DE VICTORIAS: V/T=', tasa_victorias)
+        # print('>>>>>> TASA DE DERROTAS: D/T=', tasa_derrotas)
+        # print('>>>>>> TASA DE EMPATES: E/T=', tasa_empates)
 
     return agente

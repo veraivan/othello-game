@@ -102,7 +102,7 @@ rect = pygame.Rect((30,50), (160,50))
 menu_main = True 
 juego = False
 turno = 1
-
+agente = None
 while True:
 
     time.tick(90)
@@ -116,9 +116,10 @@ while True:
             x, y = pygame.mouse.get_pos()
             row = y // 70
             col = x // 70 
-            if tablero.validarMovimientos(row,col,1):
-                tablero.matriz[row][col] = Ficha(row,col,1)
-                tablero.voltearFichas(row,col,1)
+            if tablero.validarMovimientos(row, col, 1):
+                tablero.matriz[row][col] = Ficha(row, col, 1)
+                tablero.voltearFichas(row, col, 1)
+                turno = -1
             else:
                 print("Invalido")
  
@@ -139,10 +140,12 @@ while True:
 
         pantalla.blit(text_font, (30 + int((160 -text_font.get_width()) / 2),50+(int((50-text_font.get_height())) / 2)))
     elif juego:
-        if turno == 1:
-            pantalla.fill("#008000")
-            tablero.pintarTablero(pantalla)
-            tablero.colocarFichas(pantalla)
+        if turno == -1:
+            tablero = agente.siguiente_jugada(tablero, -1)
+            turno = 1
+        pantalla.fill("#008000")
+        tablero.pintarTablero(pantalla)
+        tablero.colocarFichas(pantalla)
         
     
     pygame.display.update()
