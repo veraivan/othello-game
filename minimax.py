@@ -163,12 +163,13 @@ class AgenteRL:
                         prob_max = prob
                         fil = i
                         col = j
-                    self.tablero.matriz = matriz_anterior
+                    self.tablero.matriz = deepcopy(matriz_anterior)
         # entrenar
-        if self.entrenar:
-            self.actualizar_probabilidad(self.tablero_final, prob_max, jugador)
-        # aplicar jugada
-        self.tablero.colocar_ficha_nueva(fil, col, jugador)
+        if len(movimientos) > 0:
+            if self.entrenar:
+                self.actualizar_probabilidad(self.tablero_final, prob_max, jugador)
+            # aplicar jugada
+            self.tablero.colocar_ficha_nueva(fil, col, jugador)
         # actualizar ultimo tablero
         self.tablero_final = deepcopy(self.tablero)
 
@@ -176,11 +177,15 @@ class AgenteRL:
         filas = []
         columnas = []
         movimientos = self.tablero.movimientosPosibles(jugador)
-        rdm = int(random.random() * len(movimientos))
-        # validar la posicion y asignar
-        if rdm > 0:
-            if self.tablero.validarMovimientos(movimientos[rdm][0], movimientos[rdm][1], jugador):
-                self.tablero.colocar_ficha_nueva(movimientos[rdm][0], movimientos[rdm][1], jugador)
+        cant_movs = len(movimientos)
+        if cant_movs > 0:
+            ficha_colocada = False
+            while not ficha_colocada:
+                rdm = int(random.random() * cant_movs)
+                # validar la posicion y asignar
+                if self.tablero.validarMovimientos(movimientos[rdm][0], movimientos[rdm][1], jugador):
+                    self.tablero.colocar_ficha_nueva(movimientos[rdm][0], movimientos[rdm][1], jugador)
+                    ficha_colocada = True
             if jugador == self.jugador_agente:
                 self.tablero_final = deepcopy(self.tablero)
 
@@ -191,7 +196,7 @@ class AgenteRL:
         jugadas = 60
         contador_jugar = 1
         contador_jugar_random = 1
-        while jugadas > -1:
+        while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
@@ -205,7 +210,7 @@ class AgenteRL:
                 contador_jugar_random += 1
 
             self.resultado_juego = self.tablero.calcular_resultado()
-            if self.resultado_juego > 0:
+            if self.resultado_juego != 0:
                 if self.resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
@@ -225,7 +230,7 @@ class AgenteRL:
         contrario = -jugador
         turno = 1
         jugadas = 60
-        while jugadas > -1:
+        while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
                 self.jugar(jugador)
             else:
@@ -242,9 +247,9 @@ class AgenteRL:
 def entrenar_nuevo_agente():
     q_rates = {0.1, 0.5}
 
-    ciclos_entrenamiento = 50
+    ciclos_entrenamiento = 2000
     ciclos_entrenamiento_humano = 0
-    contador_total_juegos = 1000
+    contador_total_juegos = 50
 
     for q in q_rates:
         tasa_victorias = 0
@@ -287,7 +292,7 @@ def entrenar_nuevo_agente():
                 empates += 1
         tasa_victorias += victorias / contador_total_juegos
         tasa_derrotas += derrotas / contador_total_juegos
-        tasa_empates += derrotas / contador_total_juegos
+        tasa_empates += empates / contador_total_juegos
 
         print('>>>>>> TASA DE VICTORIAS: V/T=', tasa_victorias)
         print('>>>>>> TASA DE DERROTAS: D/T=', tasa_derrotas)

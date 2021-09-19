@@ -96,11 +96,12 @@ time = pygame.time.Clock()
 font = pygame.font.SysFont("notomono", 15, True)
 text_font = font.render("Comenzar juego", True, "#FFFFFF")
 
-background = pygame.image.load("principal.jpg").convert() 
+background = pygame.image.load("principal.jpg").convert()
 rect = pygame.Rect((30,50), (160,50)) 
 
 menu_main = True 
 juego = False
+turno = 1
 
 while True:
 
@@ -138,9 +139,10 @@ while True:
 
         pantalla.blit(text_font, (30 + int((160 -text_font.get_width()) / 2),50+(int((50-text_font.get_height())) / 2)))
     elif juego:
-        pantalla.fill("#008000")
-        tablero.pintarTablero(pantalla)
-        tablero.colocarFichas(pantalla)
+        if turno == 1:
+            pantalla.fill("#008000")
+            tablero.pintarTablero(pantalla)
+            tablero.colocarFichas(pantalla)
         
     
     pygame.display.update()
