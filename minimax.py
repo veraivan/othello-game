@@ -3,8 +3,6 @@ import random
 from gui.figuras import Tablero, Ficha
 from copy import deepcopy
 
-cantidad_movimientos = [(0,-1), (0,1), (-1,-1), (1,1), (-1,0), (1,0), (1,-1), (-1,1)]
-
 tablero_pesos = [
     [100, -10, 11, 6, 6, 11, -10, 100],
     [-10, -20, 1, 2, 2, 1, -20, -10],
@@ -16,55 +14,76 @@ tablero_pesos = [
     [100, -10, 11, 6, 6, 11, -10, 100]
 ]
 
-# 1 ficha blanca, -1 ficha negra, 0 celda vacia
 
-"""
-class Tablero:
-    def __init__(self):
-        self.tablero = [None] * 8
-        for i in range(8):
-            self.tablero[i] = [0]*8
-        self.tablero[3][3] = 1
-        self.tablero[3][4] = -1
-        self.tablero[4][3] = -1
-        self.tablero[4][4] = 1 
+#Limite de profundidad
+N_LIMIT = 2
+
+def funcion_evaluacion(tablero, color):
+    oponente = -color 
+    total = 0 
+
+    coordenadas_jugador = tablero.contarFichas(color)
+    for pos in coordenadas_jugador:
+        total += tablero_pesos[pos[0]][pos[1]] 
     
-    def contar_fichas(self, pieza):
-        posiciones = []
-        for f in range(8):
-            for c in range(8):
-                if self.tablero[f][c] == pieza:
-                    posiciones.append((f,c))
-        return posiciones 
+    coordenadas_op = tablero.contarFichas(oponente) 
+    for pos in coordenadas_op:
+        total -= tablero_pesos[pos[0]][pos[1]]
+
+    return total
+
+
+def min_valor(estado, N):
+
+    if N == N_LIMIT:
+        return (funcion_evaluacion(estado,-1),None)
     
-    def verificar_movimientos(self, x, y, destino, oponente):
-        if self.tablero[x][y] == oponente:
-            while x >= 0 and x < 8 and y >= 0 and y < 8:
-                x += destino[0]
-                y += destino[1]
-                if self.tablero[x][y] == 0:
-                    return (x,y) 
-                elif self.tablero[x][y] == -oponente:
-                    return False
-        else:
-            return False 
+    lista_movimientos = estado.movimientosPosibles(-1)
+
+    if not lista_movimientos:
+        return (funcion_evaluacion(estado,-1),None)
+
+    mejor_utilidad = sys.maxsize
+    mejor_movimiento = None
+
+    for move in lista_movimientos:
+        nuevo_estado = deepcopy(estado)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],-1)
+        nuevo_estado.voltearFichas(move[0],move[1],-1)
+        tupla = max_valor(nuevo_estado, N+1)
+        if tupla[0] < mejor_utilidad:
+            mejor_utilidad = tupla[0]
+            mejor_movimiento = move
+    return (mejor_utilidad, mejor_movimiento)
+
+
+def max_valor(estado, N):
+
+    if N == N_LIMIT:
+        return (funcion_evaluacion(estado,1),None)
+
+    lista_movimientos = estado.movimientosPosibles(1)
+
+    if not lista_movimientos:
+        return (funcion_evaluacion(estado,1),None)
+
+    mejor_utilidad = -sys.maxsize
+    mejor_movimiento = None
     
-    def verificarTableroCompleto(self):
-        for f in range(8):
-            for c in range(8):
-                if self.tablero[f][c] == 0:
-                    return False 
-        return True 
-    
-    def obtener_movimientos(self, origin, pieza):
-        movimientos_legales = set()
-        for destino in cantidad_movimientos:
-            x, y = origin[0] + destino[0], origin[1] + destino[1]
-            pos = self.verificar_movimientos(x,y, -pieza, destino)
-            if pos:
-                movimientos_legales.add(pos)
-        return movimientos_legales 
-"""
+    for move in lista_movimientos:
+        nuevo_estado = deepcopy(estado)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],1)
+        nuevo_estado.voltearFichas(move[0],move[1],1)
+        tupla = min_valor(nuevo_estado, N + 1)
+        if tupla[0] > mejor_utilidad:
+            mejor_utilidad = tupla[0]
+            mejor_movimiento = move
+    return (mejor_utilidad, mejor_movimiento)
+
+
+def minimax(estado, N):
+    mejor_movimiento = max_valor(estado,1)[1]
+    return mejor_movimiento
 
 
 class AgenteRL:
@@ -255,7 +274,7 @@ class AgenteRL:
 def entrenar_nuevo_agente():
     q_rates = {0.5}
 
-    ciclos_entrenamiento = 200
+    ciclos_entrenamiento = 50
     ciclos_entrenamiento_humano = 0
     contador_total_juegos = 0
 
