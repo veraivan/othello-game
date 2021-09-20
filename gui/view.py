@@ -1,7 +1,7 @@
 import pygame, sys
 from copy import deepcopy
 from gui.figuras import Tablero, Ficha
-from minimax import entrenar_nuevo_agente, minimax
+from minimax import entrenar_nuevo_agente, minimax, minimax_alfa_beta
 
 def iniciar_grafica():
 
@@ -123,6 +123,8 @@ def iniciar_grafica():
                     entrenar_rl = True
                 else:
                     pygame.draw.rect(pantalla, "#000000", btn3, border_radius=12)
+            else:
+                pygame.draw.rect(pantalla, "#191970", btn3, border_radius=12)
 
             pantalla.blit(text_btn1, (200 + int((160 -text_btn1.get_width()) / 2),70+(int((50-text_btn1.get_height())) / 2)))
             pantalla.blit(text_btn2, (200 + int((160 -text_btn2.get_width()) / 2),150+(int((50-text_btn2.get_height())) / 2)))
