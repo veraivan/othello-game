@@ -1,8 +1,7 @@
 from minimax import AgenteRL
 import time
-from minimax import entrenar_nuevo_agente
+from minimax import entrenar_nuevo_agente, minimax, minimax_alfa_beta
 from gui.figuras import Tablero
-from gui.view import minimax, minimax_alfa_beta
 
 
 def tests():
@@ -181,7 +180,7 @@ def minimax_vs_agenteRL(poda, n, agente):
     victorias_minimax = 0
     victorias_agenterl = 0
     empates = 0
-    for i in range(100):
+    for i in range(1000):
         tablero = Tablero()
         jugador_minimax = 1
         jugador_agenterl = -1
