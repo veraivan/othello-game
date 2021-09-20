@@ -127,8 +127,8 @@ def tests():
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
 
-    agente = entrenar_nuevo_agente()
-    minimax_vs_agenteRL(False, 4, agente)
+    # agente = entrenar_nuevo_agente()
+    # minimax_vs_agenteRL(False, 4, agente)
 
 
 def minimax_vs_alfabeta(n_minimax, n_alfabeta):
@@ -140,19 +140,25 @@ def minimax_vs_alfabeta(n_minimax, n_alfabeta):
     empates = 0
     for i in range(100):
         tablero = Tablero()
+        turno = -1
         jugador_minimax = 1
         jugador_alfabeta = -1
         inicio_juego = time.time()
-        while tablero.finDeJuego():
+        print(i)
+        while not tablero.finDeJuego():
             if turno == 1:
                 inicio_turno = time.time()
-                minimax(tablero, n_minimax, jugador_minimax)
+                minimax.N_LIMIT = n_minimax
+                x, y = minimax(tablero, n_minimax, jugador_minimax)
+                tablero.colocar_ficha_nueva(x, y, jugador_minimax)
                 fin_turno = time.time()
                 tiempo_individual_minimax += (fin_turno - inicio_turno)
                 turno = -1
             elif turno == -1:
                 inicio_turno = time.time()
-                minimax_alfa_beta(tablero, n_alfabeta, jugador_alfabeta)
+                minimax.N_LIMIT = n_alfabeta
+                x, y = minimax_alfa_beta(tablero, n_alfabeta, jugador_alfabeta)
+                tablero.colocar_ficha_nueva(x, y, jugador_alfabeta)
                 fin_turno = time.time()
                 tiempo_individual_alfabeta += (fin_turno - inicio_turno)
                 turno = 1
@@ -167,7 +173,7 @@ def minimax_vs_alfabeta(n_minimax, n_alfabeta):
             empates += 1
 
     duracion_media_turno_minimax = tiempo_individual_minimax/100
-    duracion_media_turno_alfabeta = tiempo_individual_minimax/100
+    duracion_media_turno_alfabeta = tiempo_individual_alfabeta/100
     duracion_media_partida = duracion_partida/100
 
     return duracion_media_turno_minimax, duracion_media_turno_alfabeta, duracion_media_partida, victorias_minimax, victorias_alfabeta, empates
@@ -180,7 +186,7 @@ def minimax_vs_agenteRL(poda, n, agente):
     victorias_minimax = 0
     victorias_agenterl = 0
     empates = 0
-    for i in range(1000):
+    for i in range(10):
         tablero = Tablero()
         jugador_minimax = 1
         jugador_agenterl = -1
@@ -189,9 +195,11 @@ def minimax_vs_agenteRL(poda, n, agente):
             if turno == 1:
                 inicio_turno = time.time()
                 if poda == False:
-                    minimax(tablero, n, jugador_minimax)
+                    x, y = minimax(tablero, n, jugador_minimax)
+                    tablero.colocar_ficha_nueva(x, y, jugador_minimax)
                 else:
-                    minimax_alfa_beta(tablero, n, jugador_minimax)
+                    x, y = minimax_alfa_beta(tablero, n, jugador_minimax)
+                    tablero.colocar_ficha_nueva(x, y, jugador_minimax)
                 fin_turno = time.time()
                 tiempo_individual_minimax += (fin_turno - inicio_turno)
                 turno = -1

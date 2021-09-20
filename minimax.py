@@ -16,7 +16,8 @@ tablero_pesos = [
 
 
 #Limite de profundidad
-N_LIMIT = 4
+# N_LIMIT = 4
+N_LIMIT = None
 
 def funcion_evaluacion(tablero, color):
     oponente = -color 
@@ -98,12 +99,16 @@ def max_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
 
 
 def minimax_alfa_beta(estado, N, jugador):
+    global N_LIMIT
+    N_LIMIT = N
     mejor_movimiento = max_valor(estado, 1, jugador, True, -sys.maxsize, sys.maxsize)[1]
     return mejor_movimiento
 
 
 def minimax(estado, N, jugador):
-    mejor_movimiento = max_valor(estado, 1, jugador, True, -sys.maxsize, sys.maxsize)[1]
+    global N_LIMIT
+    N_LIMIT = N
+    mejor_movimiento = max_valor(estado, 1, jugador)[1]
     return mejor_movimiento
 
 
