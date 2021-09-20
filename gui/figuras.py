@@ -151,13 +151,6 @@ class Tablero:
             return True 
         else:
             return False 
-    
-    def prueba(self):
-        for f in range(8):
-            for c in range(8):
-                if not self.matriz[f][c]: 
-                    return False 
-        return True
 
     
 
