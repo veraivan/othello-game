@@ -176,7 +176,7 @@ class AgenteRL:
             self.tablero_final = deepcopy(self.tablero)
             return fil, col
 
-    def jugar_random(self, jugador, contador):
+    def jugar_random(self, jugador):
         filas = []
         columnas = []
         movimientos = self.tablero.movimientosPosibles(jugador)
@@ -192,6 +192,12 @@ class AgenteRL:
             if jugador == self.jugador_agente:
                 self.tablero_final = deepcopy(self.tablero)
 
+    def jugar_minimax(self, N):
+        jugador = -1
+        contrario = 1
+        x, y = minimax(self.tablero, N)
+        self.tablero.colocar_ficha_nueva(x, y, -1)
+
     def jugar_vs_random(self):
         jugador = self.jugador_agente
         contrario = -jugador
@@ -204,13 +210,10 @@ class AgenteRL:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
                     self.jugar(jugador)
-                    contador_jugar += 1
                 else:
-                    self.jugar_random(jugador, contador_jugar_random)
-                    contador_jugar_random += 1
+                    self.jugar_random(jugador)
             else:
-                self.jugar_random(contrario, contador_jugar_random)
-                contador_jugar_random += 1
+                self.jugar_random(contrario)
 
             self.resultado_juego = self.tablero.calcular_resultado()
             if self.resultado_juego != 0:
@@ -220,26 +223,25 @@ class AgenteRL:
             turno = 2 - turno + 1
             jugadas -= 1
 
-    def jugar_humano(self, jugador):
-        """
-        Implementar de acuerdo como se juega Reversi/Othello y de acuerdo a como se reciben los valores desde la UI
-        :param jugador:
-        :return:
-        """
-        return jugador
-
-    def jugar_vs_humano(self):
+    def jugar_vs_minimax(self):
         jugador = self.jugador_agente
         contrario = -jugador
         turno = 1
         jugadas = 60
+        contador_jugar = 1
+        contador_jugar_random = 1
         while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
-                self.jugar(jugador)
+                q = random.random()
+                if q <= self.q_rate or not self.entrenar:
+                    self.jugar(jugador)
+                else:
+                    self.jugar_minimax(jugador)
             else:
-                self.jugar_humano(contrario)
+                self.jugar_random(contrario)
+
             self.resultado_juego = self.tablero.calcular_resultado()
-            if self.resultado_juego > 0:
+            if self.resultado_juego != 0:
                 if self.resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
@@ -275,14 +277,10 @@ def entrenar_nuevo_agente():
             agente.jugar_vs_random()
 
         # JUGADOR MINIMAX
-
-        # JUGADOR HUMANO
-        agente.set_n(ciclos_entrenamiento_humano)
-        agente.set_alfa(0.7)
         for i in range(agente.n):
             agente.reset(True)
-            # agente.jugar_vs_humano()
-            agente.jugar_vs_random()
+            agente.actualizar_alfa(i)
+            agente.jugar_vs_minimax()
 
         victorias = 0
         derrotas = 0

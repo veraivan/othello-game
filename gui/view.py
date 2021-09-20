@@ -1,6 +1,6 @@
 import pygame, sys, os 
 from copy import deepcopy
-from figuras import Tablero, Ficha
+from gui.figuras import Tablero, Ficha
 from minimax import entrenar_nuevo_agente
 
 
@@ -17,7 +17,7 @@ tablero_pesos = [
 ]
 
 
-N_LIMIT = 4
+N_LIMIT = 6
 
 def funcion_evaluacion(tablero, color):
     oponente = -color 
@@ -34,56 +34,78 @@ def funcion_evaluacion(tablero, color):
     return total
 
 
-def min_valor(estado, N):
+def min_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
+    contrario = -jugador
 
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,1),None)
+        return funcion_evaluacion(estado, contrario), None
     
-    lista_movimientos = estado.movimientosPosibles(-1)
+    lista_movimientos = estado.movimientosPosibles(jugador)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,-1),None)
+        return funcion_evaluacion(estado, jugador), None
 
     mejor_utilidad = sys.maxsize
     mejor_movimiento = None
 
     for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
-        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],-1)
-        nuevo_estado.voltearFichas(move[0],move[1],-1)
-        tupla = max_valor(nuevo_estado, N+1)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0], move[0], jugador)
+        nuevo_estado.voltearFichas(move[0], move[1], jugador)
+        if poda:
+            tupla = max_valor(nuevo_estado, N+1, contrario, True, alfa, beta)
+        else:
+            tupla = max_valor(nuevo_estado, N+1, contrario)
         if tupla[0] < mejor_utilidad:
             mejor_utilidad = tupla[0]
             mejor_movimiento = move
-    return (mejor_utilidad, mejor_movimiento)
+            if poda:
+                if mejor_utilidad <= alfa:
+                    return mejor_utilidad, move
+                beta = min(beta, mejor_utilidad)
+    return mejor_utilidad, mejor_movimiento
 
 
-def max_valor(estado, N):
+def max_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
+
+    contrario = -jugador
 
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,-1),None)
+        return funcion_evaluacion(estado, contrario), None
 
-    lista_movimientos = estado.movimientosPosibles(1)
+    lista_movimientos = estado.movimientosPosibles(jugador)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,1),None)
+        return funcion_evaluacion(estado, jugador), None
 
     mejor_utilidad = -sys.maxsize
     mejor_movimiento = None
     
     for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
-        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],1)
-        nuevo_estado.voltearFichas(move[0],move[1],1)
-        tupla = min_valor(nuevo_estado, N + 1)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0], move[0], jugador)
+        nuevo_estado.voltearFichas(move[0], move[1], jugador)
+        if poda:
+            tupla = min_valor(nuevo_estado, N + 1, contrario, True, alfa, beta)
+        else:
+            tupla = min_valor(nuevo_estado, contrario, N + 1)
         if tupla[0] > mejor_utilidad:
             mejor_utilidad = tupla[0]
             mejor_movimiento = move
-    return (mejor_utilidad, mejor_movimiento)
+            if poda:
+                if mejor_utilidad >= beta:
+                    return mejor_utilidad, move
+                alfa = max(alfa, mejor_utilidad)
+    return mejor_utilidad, mejor_movimiento
 
 
-def minimax(estado, N):
-    mejor_movimiento = max_valor(estado,1)[1]
+def minimax_alfa_beta(estado, N, jugador):
+    mejor_movimiento = max_valor(estado, 1, jugador, True, -sys.maxsize, sys.maxsize)[1]
+    return mejor_movimiento
+
+
+def minimax(estado, N, jugador):
+    mejor_movimiento = max_valor(estado, 1, jugador, True, -sys.maxsize, sys.maxsize)[1]
     return mejor_movimiento
 
 tablero = Tablero()
@@ -101,7 +123,7 @@ time = pygame.time.Clock()
 font = pygame.font.SysFont("notomono", 15, True)
 text_font = font.render("Comenzar juego", True, "#FFFFFF")
 
-background = pygame.image.load("principal.jpg").convert()
+background = pygame.image.load("gui/principal.jpg").convert()
 rect = pygame.Rect((30,50), (160,50)) 
 
 menu_main = True 
@@ -125,7 +147,7 @@ while True:
             if tablero.validarMovimientos(row, col, -1):
                 tablero.matriz[row][col] = Ficha(row, col, -1)
                 tablero.voltearFichas(row, col, -1)
-                x, y = minimax(tablero, 1)
+                x, y = minimax(tablero, 1, 1)
                 tablero.matriz[x][y] = Ficha(x, y, 1)
                 tablero.voltearFichas(x, y, 1)
                 turno = -1
