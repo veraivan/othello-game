@@ -16,7 +16,7 @@ tablero_pesos = [
 
 
 #Limite de profundidad
-N_LIMIT = 2
+N_LIMIT = None
 
 def funcion_evaluacion(tablero, color):
     oponente = -color 
@@ -33,56 +33,81 @@ def funcion_evaluacion(tablero, color):
     return total
 
 
-def min_valor(estado, N):
+def min_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
+    contrario = -jugador
 
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,-1),None)
-    
-    lista_movimientos = estado.movimientosPosibles(-1)
+        return funcion_evaluacion(estado, contrario), None
+
+    lista_movimientos = estado.movimientosPosibles(jugador)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,-1),None)
+        return funcion_evaluacion(estado, jugador), None
 
     mejor_utilidad = sys.maxsize
     mejor_movimiento = None
 
     for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
-        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],-1)
-        nuevo_estado.voltearFichas(move[0],move[1],-1)
-        tupla = max_valor(nuevo_estado, N+1)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0], move[0], jugador)
+        nuevo_estado.voltearFichas(move[0], move[1], jugador)
+        if poda:
+            tupla = max_valor(nuevo_estado, N + 1, contrario, True, alfa, beta)
+        else:
+            tupla = max_valor(nuevo_estado, N + 1, contrario)
         if tupla[0] < mejor_utilidad:
             mejor_utilidad = tupla[0]
             mejor_movimiento = move
-    return (mejor_utilidad, mejor_movimiento)
+            if poda:
+                if mejor_utilidad <= alfa:
+                    return mejor_utilidad, move
+                beta = min(beta, mejor_utilidad)
+    return mejor_utilidad, mejor_movimiento
 
 
-def max_valor(estado, N):
+def max_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
+    contrario = -jugador
 
     if N == N_LIMIT:
-        return (funcion_evaluacion(estado,1),None)
+        return funcion_evaluacion(estado, contrario), None
 
-    lista_movimientos = estado.movimientosPosibles(1)
+    lista_movimientos = estado.movimientosPosibles(jugador)
 
     if not lista_movimientos:
-        return (funcion_evaluacion(estado,1),None)
+        return funcion_evaluacion(estado, jugador), None
 
     mejor_utilidad = -sys.maxsize
     mejor_movimiento = None
-    
+
     for move in lista_movimientos:
         nuevo_estado = deepcopy(estado)
-        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0],move[0],1)
-        nuevo_estado.voltearFichas(move[0],move[1],1)
-        tupla = min_valor(nuevo_estado, N + 1)
+        nuevo_estado.matriz[move[0]][move[1]] = Ficha(move[0], move[0], jugador)
+        nuevo_estado.voltearFichas(move[0], move[1], jugador)
+        if poda:
+            tupla = min_valor(nuevo_estado, N + 1, contrario, True, alfa, beta)
+        else:
+            tupla = min_valor(nuevo_estado, contrario, N + 1)
         if tupla[0] > mejor_utilidad:
             mejor_utilidad = tupla[0]
             mejor_movimiento = move
-    return (mejor_utilidad, mejor_movimiento)
+            if poda:
+                if mejor_utilidad >= beta:
+                    return mejor_utilidad, move
+                alfa = max(alfa, mejor_utilidad)
+    return mejor_utilidad, mejor_movimiento
 
 
-def minimax(estado, N):
-    mejor_movimiento = max_valor(estado,1)[1]
+def minimax_alfa_beta(estado, N, jugador):
+    global N_LIMIT
+    N_LIMIT = N
+    mejor_movimiento = max_valor(estado, 1, jugador, True, -sys.maxsize, sys.maxsize)[1]
+    return mejor_movimiento
+
+
+def minimax(estado, N, jugador):
+    global N_LIMIT
+    N_LIMIT = N
+    mejor_movimiento = max_valor(estado, 1, jugador)[1]
     return mejor_movimiento
 
 
@@ -195,7 +220,7 @@ class AgenteRL:
             self.tablero_final = deepcopy(self.tablero)
             return fil, col
 
-    def jugar_random(self, jugador, contador):
+    def jugar_random(self, jugador):
         filas = []
         columnas = []
         movimientos = self.tablero.movimientosPosibles(jugador)
@@ -211,6 +236,12 @@ class AgenteRL:
             if jugador == self.jugador_agente:
                 self.tablero_final = deepcopy(self.tablero)
 
+    def jugar_minimax(self, N):
+        jugador = -1
+        contrario = 1
+        x, y = minimax(self.tablero, N, jugador)
+        self.tablero.colocar_ficha_nueva(x, y, -1)
+
     def jugar_vs_random(self):
         jugador = self.jugador_agente
         contrario = -jugador
@@ -223,13 +254,10 @@ class AgenteRL:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
                     self.jugar(jugador)
-                    contador_jugar += 1
                 else:
-                    self.jugar_random(jugador, contador_jugar_random)
-                    contador_jugar_random += 1
+                    self.jugar_random(jugador)
             else:
-                self.jugar_random(contrario, contador_jugar_random)
-                contador_jugar_random += 1
+                self.jugar_random(contrario)
 
             self.resultado_juego = self.tablero.calcular_resultado()
             if self.resultado_juego != 0:
@@ -239,26 +267,25 @@ class AgenteRL:
             turno = 2 - turno + 1
             jugadas -= 1
 
-    def jugar_humano(self, jugador):
-        """
-        Implementar de acuerdo como se juega Reversi/Othello y de acuerdo a como se reciben los valores desde la UI
-        :param jugador:
-        :return:
-        """
-        return jugador
-
-    def jugar_vs_humano(self):
+    def jugar_vs_minimax(self):
         jugador = self.jugador_agente
         contrario = -jugador
         turno = 1
         jugadas = 60
+        contador_jugar = 1
+        contador_jugar_random = 1
         while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
-                self.jugar(jugador)
+                q = random.random()
+                if q <= self.q_rate or not self.entrenar:
+                    self.jugar(jugador)
+                else:
+                    self.jugar_minimax(jugador)
             else:
-                self.jugar_humano(contrario)
+                self.jugar_random(contrario)
+
             self.resultado_juego = self.tablero.calcular_resultado()
-            if self.resultado_juego > 0:
+            if self.resultado_juego != 0:
                 if self.resultado_juego != jugador and self.entrenar:
                     self.actualizar_probabilidad(self.tablero_final, self.calcular_recompensa(self.tablero, jugador), jugador)
                 break
@@ -294,14 +321,10 @@ def entrenar_nuevo_agente():
             agente.jugar_vs_random()
 
         # JUGADOR MINIMAX
-
-        # JUGADOR HUMANO
-        agente.set_n(ciclos_entrenamiento_humano)
-        agente.set_alfa(0.7)
         for i in range(agente.n):
             agente.reset(True)
-            # agente.jugar_vs_humano()
-            agente.jugar_vs_random()
+            agente.actualizar_alfa(i)
+            agente.jugar_vs_minimax()
 
         victorias = 0
         derrotas = 0

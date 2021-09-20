@@ -66,11 +66,13 @@ def iniciar_grafica():
                     tablero.matriz[row][col] = Ficha(row, col, -1)
                     tablero.voltearFichas(row, col, -1) 
                     if algoritmo_minimax:
-                        x, y = minimax(tablero, 1)
+                        x, y = minimax(tablero, 4, 1)
                         tablero.matriz[x][y] = Ficha(x, y, 1)
                         tablero.voltearFichas(x, y, 1)
                     elif algoritmo_minimax_poda:
-                        pass
+                        x, y = minimax_alfa_beta(tablero, 4, 1)
+                        tablero.matriz[x][y] = Ficha(x, y, 1)
+                        tablero.voltearFichas(x, y, 1)
                     elif algoritmo_rl:
                         tablero = agente.siguiente_jugada(tablero, 1) 
                 else:
@@ -121,9 +123,6 @@ def iniciar_grafica():
                     entrenar_rl = True
                 else:
                     pygame.draw.rect(pantalla, "#000000", btn3, border_radius=12)
-            else:
-                pygame.draw.rect(pantalla, "#191970", btn3, border_radius=12)
-
 
             pantalla.blit(text_btn1, (200 + int((160 -text_btn1.get_width()) / 2),70+(int((50-text_btn1.get_height())) / 2)))
             pantalla.blit(text_btn2, (200 + int((160 -text_btn2.get_width()) / 2),150+(int((50-text_btn2.get_height())) / 2)))
@@ -155,6 +154,7 @@ def iniciar_grafica():
             elif decision == 1:
                 text_ganador = font2.render("¡Perdiste!", True, "#FFFFFF")
             else:
+    
                 text_ganador = font2.render("¡Empate!", True, "#FFFFFF")
 
             pantalla.blit(text_ganador, (int((560 -text_ganador.get_width()) / 2), 170)) 
