@@ -3,21 +3,22 @@
 Agentes que juegan de forma inteligente contra un humano el juego Othello/Reversi, usando técnicas de IA.
 
 ### Devs
-    - José Benitez
-    - Ivan Vera 
+- José Benitez
+- Ivan Vera 
 
 ### Algoritmos 
 
-> **Basados en busqueda con Adversario**
-    - Minimax
-    - Minimax con poda Alfa-Beta 
-> **Basado en aprendizaje**
-        -  Reinforcement Learning 
+**Basados en busqueda con Adversario**
+- Minimax
+- Minimax con poda Alfa-Beta 
+
+**Basado en aprendizaje**
+- Reinforcement Learning 
 
 
 ### Instalación y juego: 
 
-Tener instalado python3 en la maquina
+>Tener instalado python3 en la maquina
 
 **Instalar la siguiente libreria:** 
 ```sh 
