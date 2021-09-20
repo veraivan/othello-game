@@ -1,7 +1,4 @@
-from minimax import AgenteRL
+from gui.view import iniciar_grafica
 
-
-"""
-ESTO DEBE ESTAR EN EL MAIN PRINCIPAL PARA EJECUTAR EL ALGORITMO
-"""
-
+if __name__ == "__main__":
+    iniciar_grafica()
