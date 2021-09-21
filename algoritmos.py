@@ -16,7 +16,6 @@ tablero_pesos = [
 
 
 #Limite de profundidad
-# N_LIMIT = 4
 N_LIMIT = None
 
 def funcion_evaluacion(tablero, color):
