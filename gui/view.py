@@ -1,6 +1,6 @@
 import pygame, sys
 from copy import deepcopy
-from figuras import Tablero, Ficha
+from gui.figuras import Tablero, Ficha
 from algoritmos import entrenar_nuevo_agente, minimax, minimax_alfa_beta
 
 def iniciar_grafica():
