@@ -1,7 +1,7 @@
 import pygame, sys
 from copy import deepcopy
 from figuras import Tablero, Ficha
-from minimax import entrenar_nuevo_agente, minimax, minimax_alfa_beta
+from algoritmos import entrenar_nuevo_agente, minimax, minimax_alfa_beta
 
 
 pygame.init()

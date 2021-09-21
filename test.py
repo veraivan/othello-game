@@ -1,6 +1,5 @@
-from minimax import AgenteRL
 import time
-from minimax import entrenar_nuevo_agente, minimax, minimax_alfa_beta
+from algoritmos import entrenar_nuevo_agente, minimax, minimax_alfa_beta, AgenteRL
 from gui.figuras import Tablero
 
 
@@ -234,8 +233,6 @@ def minimax_vs_agenteRL(poda, n, agente):
 
     return duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates
 
-print("prueba")
 
 if __name__ == "__main__":
-    print("prueba")
     tests()
