@@ -87,7 +87,7 @@ def max_valor(estado, N, jugador, poda=False, alfa=0, beta=0):
         if poda:
             tupla = min_valor(nuevo_estado, N + 1, contrario, True, alfa, beta)
         else:
-            tupla = min_valor(nuevo_estado, contrario, N + 1)
+            tupla = min_valor(nuevo_estado, N + 1, contrario)
         if tupla[0] > mejor_utilidad:
             mejor_utilidad = tupla[0]
             mejor_movimiento = move
