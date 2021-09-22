@@ -185,7 +185,6 @@ class AgenteRL:
 
     # ELITISTA
     def jugar(self, jugador):
-        prob = 0
         fil = 0
         col = 0
         prob_max = -sys.maxsize
@@ -222,8 +221,6 @@ class AgenteRL:
             return fil, col
 
     def jugar_random(self, jugador):
-        filas = []
-        columnas = []
         movimientos = self.tablero.movimientosPosibles(jugador)
         cant_movs = len(movimientos)
         if cant_movs > 0:
@@ -237,19 +234,20 @@ class AgenteRL:
             if jugador == self.jugador_agente:
                 self.tablero_final = deepcopy(self.tablero)
 
-    def jugar_minimax(self, N):
-        jugador = -1
-        contrario = 1
-        x, y = minimax(self.tablero, N, jugador)
-        self.tablero.colocar_ficha_nueva(x, y, -1)
+    def jugar_minimax(self, N, jugador, poda=False):
+        if poda:
+            movimiento = minimax_alfa_beta(self.tablero, N, jugador)
+        else:
+            movimiento = minimax(self.tablero, N, jugador)
+        if movimiento:
+            x, y = movimiento
+            self.tablero.colocar_ficha_nueva(x, y, jugador)
 
     def jugar_vs_random(self):
         jugador = self.jugador_agente
         contrario = -jugador
         turno = 1
         jugadas = 60
-        contador_jugar = 1
-        contador_jugar_random = 1
         while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
                 q = random.random()
@@ -268,20 +266,18 @@ class AgenteRL:
             turno = 2 - turno + 1
             jugadas -= 1
 
-    def jugar_vs_minimax(self):
+    def jugar_vs_minimax(self, N):
         jugador = self.jugador_agente
         contrario = -jugador
         turno = 1
         jugadas = 60
-        contador_jugar = 1
-        contador_jugar_random = 1
         while jugadas > -1 or self.tablero.finDeJuego():
             if turno == jugador:
                 q = random.random()
                 if q <= self.q_rate or not self.entrenar:
                     self.jugar(jugador)
                 else:
-                    self.jugar_minimax(jugador)
+                    self.jugar_minimax(N, jugador)
             else:
                 self.jugar_random(contrario)
 
@@ -299,48 +295,67 @@ class AgenteRL:
         return self.tablero
 
 
-def entrenar_nuevo_agente():
+def entrenar_nuevo_agente(ciclos_entrenamiento=50, entrenar_contra=1):
+    '''
+    Funcion que devuelve un jugador de Othello Agente Reinforcement Learning
+    Por defecto se entrena con los siguientes valores:
+     - Un solo Q-rate de 0.5
+     - 50 ciclos de entrenamiento
+     - 50 ciclos de validacion
+     - Entrenado contra un jugador aleatorio
+     - Si se entrena contra un Minimax su profundidad de 4
+
+    :return: Agente RL jugador de Othello
+    '''
+
     q_rates = {0.5}
 
-    ciclos_entrenamiento = 50
-    ciclos_entrenamiento_humano = 0
-    contador_total_juegos = 0
+    # VARIABLE DE PROFUNDIDAD CON LA CUAL JUEGA EL JUGADOR MINIMAX UTILIZADO PARA ENTRENAR
+    n_minimax = 4
+
+    # VARIABLE PARA INDICAR SI ENTRENAR CON JUGADOR ALEATORIO O CONTRA JUGADOR MINIMAX
+    # JUGADOR ALEATORIO = 1
+    # JUGADOR MINIMAX = 2
+    entrenar_con = entrenar_contra
+
 
     for q in q_rates:
-        tasa_victorias = 0
-        tasa_derrotas = 0
-        tasa_empates = 0
+        # tasa_victorias = 0
+        # tasa_derrotas = 0
+        # tasa_empates = 0
 
         agente = AgenteRL(ciclos_entrenamiento)
         agente.set_q(q)
         # SE ELIGE SI VA A SER ENTRENADO CON UN JUGADOR ALEATORIO O CON UN JUGADOR MINIMAX
 
         # JUGADOR ALEATORIO
-        for i in range(agente.n):
-            agente.reset(True)
-            agente.actualizar_alfa(i)
-            agente.jugar_vs_random()
+        if entrenar_con == 1:
+            for i in range(agente.n):
+                agente.reset(True)
+                agente.actualizar_alfa(i)
+                agente.jugar_vs_random()
 
         # JUGADOR MINIMAX
-        for i in range(agente.n):
-            agente.reset(True)
-            agente.actualizar_alfa(i)
-            agente.jugar_vs_minimax()
+        if entrenar_con == 2:
+            for i in range(agente.n):
+                agente.reset(True)
+                agente.actualizar_alfa(i)
+                agente.jugar_vs_minimax(n_minimax)
 
-        victorias = 0
-        derrotas = 0
-        empates = 0
-        contrario = -agente.jugador_agente
-        for i in range(contador_total_juegos):
-            agente.reset(False)
-            agente.jugar_vs_random()
-
-            if agente.resultado_juego == agente.jugador_agente:
-                victorias += 1
-            elif agente.resultado_juego == contrario:
-                derrotas +=1
-            else:
-                empates += 1
+        # victorias = 0
+        # derrotas = 0
+        # empates = 0
+        # contrario = -agente.jugador_agente
+        # for i in range(contador_total_juegos):
+        #     agente.reset(False)
+        #     agente.jugar_vs_random()
+        #
+        #     if agente.resultado_juego == agente.jugador_agente:
+        #         victorias += 1
+        #     elif agente.resultado_juego == contrario:
+        #         derrotas +=1
+        #     else:
+        #         empates += 1
         # tasa_victorias += victorias / contador_total_juegos
         # tasa_derrotas += derrotas / contador_total_juegos
         # tasa_empates += empates / contador_total_juegos
@@ -350,3 +365,26 @@ def entrenar_nuevo_agente():
         # print('>>>>>> TASA DE EMPATES: E/T=', tasa_empates)
 
     return agente
+
+
+def validacion_agente(agente, ciclos_validacion):
+    victorias = 0
+    derrotas = 0
+    empates = 0
+    contrario = -agente.jugador_agente
+    for i in range(ciclos_validacion):
+        agente.reset(False)
+        agente.jugar_vs_random()
+
+        if agente.resultado_juego == agente.jugador_agente:
+            victorias += 1
+        elif agente.resultado_juego == contrario:
+            derrotas += 1
+        else:
+            empates += 1
+
+    tasa_victorias = victorias/ciclos_validacion
+    tasa_derrotas = derrotas/ciclos_validacion
+    tasa_empates = empates/ciclos_validacion
+
+    return tasa_victorias, tasa_derrotas, tasa_empates
