@@ -66,13 +66,17 @@ def iniciar_grafica():
                     tablero.matriz[row][col] = Ficha(row, col, -1)
                     tablero.voltearFichas(row, col, -1) 
                     if algoritmo_minimax:
-                        x, y = minimax(tablero, 4, 1)
-                        tablero.matriz[x][y] = Ficha(x, y, 1)
-                        tablero.voltearFichas(x, y, 1)
+                        movimiento = minimax(tablero, 4, 1)
+                        if movimiento:
+                            x, y = movimiento
+                            tablero.matriz[x][y] = Ficha(x, y, 1)
+                            tablero.voltearFichas(x, y, 1)
                     elif algoritmo_minimax_poda:
-                        x, y = minimax_alfa_beta(tablero, 4, 1)
-                        tablero.matriz[x][y] = Ficha(x, y, 1)
-                        tablero.voltearFichas(x, y, 1)
+                        movimiento = minimax_alfa_beta(tablero, 4, 1)
+                        if movimiento:
+                            x, y = movimiento
+                            tablero.matriz[x][y] = Ficha(x, y, 1)
+                            tablero.voltearFichas(x, y, 1)
                     elif algoritmo_rl:
                         tablero = agente.siguiente_jugada(tablero, 1) 
                 else:
