@@ -295,7 +295,7 @@ class AgenteRL:
         return self.tablero
 
 
-def entrenar_nuevo_agente(ciclos_entrenamiento=50, entrenar_contra=1):
+def entrenar_nuevo_agente(ciclos_entrenamiento=300, entrenar_contra=1):
     '''
     Funcion que devuelve un jugador de Othello Agente Reinforcement Learning
     Por defecto se entrena con los siguientes valores:

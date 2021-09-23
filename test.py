@@ -128,6 +128,7 @@ def tests():
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
 
     agente = entrenar_nuevo_agente()
+    print("Minimax(2) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(False, 2, agente)
     print("Duracion media turno Minimax(2): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -137,6 +138,7 @@ def tests():
     print("Empates: ", empates)
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
+    print("Minimax(3) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(False, 3, agente)
     print("Duracion media turno Minimax(3): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -146,6 +148,7 @@ def tests():
     print("Empates: ", empates)
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
+    print("Minimax(4) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(False, 4, agente)
     print("Duracion media turno Minimax(4): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -155,6 +158,7 @@ def tests():
     print("Empates: ", empates)
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
+    print("Alfabeta(2) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(True, 2, agente)
     print("Duracion media turno Alfabeta(2): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -164,6 +168,7 @@ def tests():
     print("Empates: ", empates)
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
+    print("Alfabeta(3) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(True, 3, agente)
     print("Duracion media turno Alfabeta(3): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -173,6 +178,7 @@ def tests():
     print("Empates: ", empates)
     print()
     print("--------------------------------------------------------------------------------------------------------------------------------------------")
+    print("Alfabeta(4) vs Agente RL")
     duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates = minimax_vs_agenteRL(True, 4, agente)
     print("Duracion media turno Alfabeta(4): ", duracion_media_turno_minimax)
     print("Duracion media turno Agente RL: ", duracion_media_turno_agenterl)
@@ -393,12 +399,13 @@ def minimax_vs_agenteRL(poda, n, agente):
     victorias_minimax = 0
     victorias_agenterl = 0
     empates = 0
-    for i in range(10):
+    for i in range(100):
         tablero = Tablero()
+        turno = 1
         jugador_minimax = 1
         jugador_agenterl = -1
         inicio_juego = time.time()
-        while tablero.finDeJuego():
+        while not tablero.finDeJuego():
             if turno == 1:
                 inicio_turno = time.time()
                 if poda == False:
@@ -417,7 +424,7 @@ def minimax_vs_agenteRL(poda, n, agente):
             elif turno == -1:
                 inicio_turno = time.time()
                 agente.tablero = tablero
-                agente.jugar(tablero, jugador_agenterl)
+                agente.jugar(jugador_agenterl)
                 fin_turno = time.time()
                 tiempo_individual_agenterl += (fin_turno - inicio_turno)
                 turno = 1
@@ -432,7 +439,7 @@ def minimax_vs_agenteRL(poda, n, agente):
             empates += 1
 
     duracion_media_turno_minimax = tiempo_individual_minimax/100
-    duracion_media_turno_agenterl = tiempo_individual_minimax/100
+    duracion_media_turno_agenterl = tiempo_individual_agenterl/100
     duracion_media_partida = duracion_partida/100
 
     return duracion_media_turno_minimax, duracion_media_turno_agenterl, duracion_media_partida, victorias_minimax, victorias_agenterl, empates
